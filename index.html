@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9. Sınıf Biyoloji Maarif Modeli Günlük Planlar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+        .accordion-content.active { max-height: 4000px; }
+        
+        #print-view { display: none; }
+        
+        @media print {
+            .no-print { display: none !important; }
+            #print-view { display: block !important; padding: 15px; background: white; color: black; }
+            body { background: white; margin: 0; padding: 0; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 15px; page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            th, td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 10pt; vertical-align: top; }
+            .section-title { background-color: #f3f4f6 !important; font-weight: bold; -webkit-print-color-adjust: exact; text-align: center; }
+            .header-text { text-align: center; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px; font-size: 12pt; }
+            .signature-box { margin-top: 30px; display: flex; justify-content: space-between; text-align: center; font-size: 10pt; }
+            .approval { border: 1px solid #000; padding: 8px; font-weight: bold; width: 120px; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- EKRAN GÖRÜNÜMÜ -->
+    <div class="flex min-h-screen flex-col md:flex-row no-print">
+        <!-- SOL MENÜ -->
+        <aside class="w-full md:w-64 bg-slate-900 text-white p-6 no-print fixed h-full z-20">
+            <div class="flex items-center gap-3 mb-8">
+                <i class="fas fa-dna text-blue-400 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-tight">Biyoloji Dersi Günlük Plan Uygulaması</h1>
+            </div>
+            
+            <label class="block text-sm font-medium mb-2 text-slate-400">Hafta Seçimi</label>
+            <select id="weekSelect" onchange="updateWeekContent()" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer mb-6 shadow-lg">
+            </select>
+
+            <div class="mt-auto pt-10 text-[10px] text-slate-500 uppercase tracking-widest border-t border-slate-800 pt-4">
+                MEB 2024 MAARİF MÜFREDATINA UYGUNDUR
+            </div>
+        </aside>
+
+        <!-- ANA İÇERİK -->
+        <main class="flex-1 md:ml-64 p-4 md:p-8">
+            <!-- ÜST BİLGİ ALANI -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Okul Adı</label>
+                        <input type="text" id="input-okul" oninput="syncInputs()" placeholder="Okul İsmi..." class="w-full border-b border-gray-200 py-1 focus:border-blue-500 outline-none font-medium text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Okul Müdürü</label>
+                        <input type="text" id="input-mudur" oninput="syncInputs()" placeholder="Müdür Adı..." class="w-full border-b border-gray-200 py-1 focus:border-blue-500 outline-none font-medium text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Öğretmen</label>
+                        <input type="text" id="input-ogretmen" oninput="syncInputs()" placeholder="Ad Soyad..." class="w-full border-b border-gray-200 py-1 focus:border-blue-500 outline-none font-medium text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Şehir / İl</label>
+                        <input type="text" id="input-il" oninput="syncInputs()" placeholder="Şehir..." class="w-full border-b border-gray-200 py-1 focus:border-blue-500 outline-none font-medium text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- HAFTA BAŞLIĞI -->
+            <div class="mb-6 flex justify-between items-center">
+                <h2 id="currentWeekTitle" class="text-2xl font-black text-slate-800 uppercase tracking-tight">... HAFTA</h2>
+                <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-lg active:scale-95">
+                    <i class="fas fa-print"></i> RESMİ FORMU YAZDIR
+                </button>
+            </div>
+
+            <!-- AKORDİYON MENÜLER -->
+            <div class="space-y-4">
+                
+                <!-- 1. DERS BİLGİSİ -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <button onclick="toggleAccordion('ders-bilgisi')" class="w-full p-5 text-left flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span class="font-bold flex items-center gap-3 text-slate-700"><i class="fas fa-info-circle text-blue-500"></i> DERS BİLGİSİ</span>
+                        <i id="icon-ders-bilgisi" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div id="content-ders-bilgisi" class="accordion-content active">
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 text-sm">
+                            <div class="space-y-3">
+                                <p><strong class="text-gray-400 uppercase text-[10px]">Tema:</strong> <br><span id="val-tema" class="text-blue-600 font-bold">...</span></p>
+                                <p><strong class="text-gray-400 uppercase text-[10px]">Süre:</strong> <br><span id="val-sure">...</span></p>
+                            </div>
+                            <div class="space-y-3 border-l pl-6 border-gray-100">
+                                <p><strong class="text-gray-400 uppercase text-[10px]">Alan Becerileri:</strong> <br><span id="val-alan" class="text-gray-600 italic">...</span></p>
+                                <p><strong class="text-gray-400 uppercase text-[10px]">Kavramsal Beceriler:</strong> <br><span id="val-kavramsal" class="text-gray-600 italic">...</span></p>
+                                <p><strong class="text-gray-400 uppercase text-[10px]">Eğilimler:</strong> <br><span id="val-egilimler" class="text-gray-600 italic">...</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. PROGRAMLAR ARASI BİLEŞENLER -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <button onclick="toggleAccordion('programlar')" class="w-full p-5 text-left flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span class="font-bold flex items-center gap-3 text-slate-700"><i class="fas fa-link text-emerald-500"></i> PROGRAMLAR ARASI BİLEŞENLER</span>
+                        <i id="icon-programlar" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div id="content-programlar" class="accordion-content">
+                        <div class="p-6 space-y-6 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                                    <h4 class="font-bold text-emerald-800 text-xs mb-2 uppercase">Sosyal-Duygusal</h4>
+                                    <p id="val-sdb" class="text-gray-700 leading-relaxed">...</p>
+                                </div>
+                                <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                                    <h4 class="font-bold text-amber-800 text-xs mb-2 uppercase">Değerler</h4>
+                                    <p id="val-deger" class="text-gray-700 leading-relaxed">...</p>
+                                </div>
+                                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                    <h4 class="font-bold text-blue-800 text-xs mb-2 uppercase">Okuryazarlıklar</h4>
+                                    <p id="val-okur" class="text-gray-700 leading-relaxed">...</p>
+                                </div>
+                            </div>
+                            <div class="pt-4 border-t">
+                                <h4 class="font-bold text-slate-800 text-xs mb-2 uppercase">Öğrenme Çıktıları ve Süreç Bileşenleri</h4>
+                                <div id="val-oc" class="bg-gray-50 p-4 rounded-lg italic border border-gray-200 leading-relaxed"></div>
+                            </div>
+                            <div class="pt-4 border-t">
+                                <h4 class="font-bold text-slate-800 text-xs mb-2 uppercase">İçerik Çerçevesi</h4>
+                                <div id="val-icerik" class="bg-gray-50 p-4 rounded-lg border border-gray-200 leading-relaxed"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. ÖĞRENME-ÖĞRETME YAŞANTILARI -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <button onclick="toggleAccordion('yasantilar')" class="w-full p-5 text-left flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span class="font-bold flex items-center gap-3 text-slate-700"><i class="fas fa-chalkboard-teacher text-amber-500"></i> ÖĞRENME-ÖĞRETME YAŞANTILARI</span>
+                        <i id="icon-yasantilar" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div id="content-yasantilar" class="accordion-content">
+                        <div class="p-6 space-y-6 text-sm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                                    <h4 class="font-bold text-orange-800 text-xs mb-2 uppercase">Temel Kabuller</h4>
+                                    <p id="val-kabuller" class="text-gray-700 leading-relaxed">...</p>
+                                </div>
+                                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                    <h4 class="font-bold text-indigo-800 text-xs mb-2 uppercase">Köprü Kurma</h4>
+                                    <p id="val-kopru" class="text-gray-700 leading-relaxed">...</p>
+                                </div>
+                            </div>
+                            <div class="pt-4">
+                                <h4 class="font-bold text-slate-800 text-xs mb-3 uppercase">Öğretme Uygulamaları</h4>
+                                <div id="val-uygulamalar" class="leading-relaxed space-y-3 text-gray-700"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. FARKLILAŞTIRMA -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <button onclick="toggleAccordion('farklilastirma')" class="w-full p-5 text-left flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <span class="font-bold flex items-center gap-3 text-slate-700"><i class="fas fa-layer-group text-purple-500"></i> FARKLILAŞTIRMA</span>
+                        <i id="icon-farklilastirma" class="fas fa-chevron-down text-gray-400 transition-transform"></i>
+                    </button>
+                    <div id="content-farklilastirma" class="accordion-content">
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                            <div class="bg-purple-50 p-5 rounded-xl border border-purple-100">
+                                <h4 class="font-bold text-purple-800 text-xs uppercase mb-2">Zenginleştirme</h4>
+                                <p id="val-zengin" class="text-gray-700 leading-relaxed"></p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                                <h4 class="font-bold text-slate-800 text-xs uppercase mb-2">Destekleme</h4>
+                                <p id="val-destek" class="text-gray-700 leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <footer class="mt-12 text-center text-gray-400 text-sm pb-8 border-t pt-8">
+                <p>Tasarım: <span class="font-bold text-gray-600">Naci Karhan</span></p>
+                <p class="mt-1">2026 - ANKARA."Her hakkı saklıdır"</p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- YAZDIRMA GÖRÜNÜMÜ -->
+    <div id="print-view">
+        <div class="header-text">
+            <span id="p-okul-ust">....................................</span><br>
+            9. SINIF BİYOLOJİ DERSİ GÜNLÜK PLANI<br>
+            <span id="p-hafta-no">1</span>. HAFTA
+        </div>
+
+        <table>
+            <tr><td colspan="4" class="section-title uppercase">DERS BİLGİSİ</td></tr>
+            <tr>
+                <td width="20%"><strong>Sınıf:</strong> 9. Sınıf</td>
+                <td width="30%"><strong>Ders:</strong> Biyoloji</td>
+                <td width="30%"><strong>Tema:</strong> <span id="p-tema">...</span></td>
+                <td width="20%"><strong>Süre:</strong> <span id="p-sure">...</span></td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Alan Becerileri:</strong><br><span id="p-alan">...</span></td>
+                <td colspan="2"><strong>Kavramsal Beceriler:</strong><br><span id="p-kavramsal">...</span></td>
+            </tr>
+            <tr><td colspan="4"><strong>Eğilimler:</strong> <span id="p-egilimler">...</span></td></tr>
+            
+            <tr><td colspan="4" class="section-title uppercase">PROGRAMLAR ARASI BİLEŞENLER</td></tr>
+            <tr><td><strong>Sosyal-Duygusal:</strong></td><td colspan="3" id="p-sdb">...</td></tr>
+            <tr><td><strong>Değerler:</strong></td><td colspan="3" id="p-deger">...</td></tr>
+            <tr><td><strong>Okuryazarlıklar:</strong></td><td colspan="3" id="p-okur">...</td></tr>
+            <tr><td colspan="4"><strong>Öğrenme Çıktıları:</strong><br><span id="p-oc">...</span></td></tr>
+            <tr><td colspan="4"><strong>İçerik Çerçevesi:</strong><br><span id="p-icerik">...</span></td></tr>
+            
+            <tr><td colspan="4" class="section-title uppercase">ÖĞRENME-ÖĞRETME YAŞANTILARI</td></tr>
+            <tr>
+                <td colspan="2"><strong>Temel Kabuller:</strong><br><span id="p-kabuller">...</span></td>
+                <td colspan="2"><strong>Köprü Kurma:</strong><br><span id="p-kopru">...</span></td>
+            </tr>
+            <tr><td colspan="4"><strong>Öğretme Uygulamaları:</strong><br><div id="p-uygulamalar">...</div></td></tr>
+            
+            <tr><td colspan="4" class="section-title uppercase">FARKLILAŞTIRMA</td></tr>
+            <tr>
+                <td colspan="2"><strong>Zenginleştirme:</strong><br><span id="p-zengin">...</span></td>
+                <td colspan="2"><strong>Destekleme:</strong><br><span id="p-destek">...</span></td>
+            </tr>
+        </table>
+
+        <div class="signature-box">
+            <div>
+                <br><span id="p-ogretmen-ad">................</span><br>Ders Öğretmeni
+            </div>
+            <div class="approval">
+                UYGUNDUR<br><br>.../.../20..
+            </div>
+            <div>
+                <br><span id="p-mudur-ad">................</span><br>Okul Müdürü
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 24 HAFTALIK TAM VERİ SETİ
+        const planData = {
+            1: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1, FBAB2, FBAB8", kavramsal: "KB2.6, KB2.8, KB2.10", egilimler: "E1.1, E3.4, E3.8", sdb: "SDB1.2. Öz Düzenleme", deger: "D3. Çalışkanlık, D12. Sabır", okur: "OB1. Bilgi Okuryazarlığı", oc: "BİY.9.1.1. Biyolojideki dönüm noktalarının insan hayatına katkılarını sorgulayabilme.", icerik: "Biyoloji Biliminin Gelişimindeki Dönüm Noktaları", kabuller: "Hücre ve DNA kavramları ortaokul seviyesinde biliniyor.", kopru: "Aşı ve antibiyotiklerin tıp tarihindeki yeri.", uygulamalar: "• DNA ve aşı keşifleri paylaşılır.<br>• Bilim insanlarının motivasyonları tartışılır.", zengin: "Nobel ödüllü keşiflerin analizi.", destek: "Görsel kartlarla keşif eşleştirme." },
+            2: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1, FBAB8", kavramsal: "KB2.10, KB2.14", egilimler: "E3.4, E3.8", sdb: "SDB2.1. İletişim", deger: "D3. Çalışkanlık", okur: "OB1. Bilgi Okuryazarlığı", oc: "BİY.9.1.1. d) Topladığı bilgiler üzerinden çıkarım yapar.", icerik: "Biyolojinin Toplumsal ve Çevresel Önemi", kabuller: "Biyoçeşitlilik kavramı bilinmektedir.", kopru: "Bilimsel araştırma süreçlerinin etik boyutu.", uygulamalar: "• Bilim insanları ve etik tartışılır.<br>• Öğrenme günlükleri portfolyoya eklenir.", zengin: "Bilim etiği vakalarının analizi.", destek: "Canlı sınıflandırma maketleri." },
+            3: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1, FBAB8", kavramsal: "KB2.6, KB2.8", egilimler: "E1.1, E3.4", sdb: "SDB1.2", deger: "D5. Duyarlılık", okur: "OB1", oc: "BİY.9.1.2. Bilimsel araştırma süreçlerinde bilimin doğasını yorumlayabilme.", icerik: "Bilimsel Araştırma Süreçleri ve Gözlem", kabuller: "Hipotez kavramı temel düzeyde bilinir.", kopru: "Veri analizinde teknoloji kullanımı.", uygulamalar: "• Gruplarda gözlem verileri toplanır.<br>• Bilimsel yöntem basamakları incelenir.", zengin: "Sistem biyolojisi yaklaşımları.", destek: "Deney videoları." },
+            4: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1, FBAB2, FBAB8", kavramsal: "KB2.6, KB2.14", egilimler: "E1.1, E3.8", sdb: "SDB1.2", deger: "D16. Sorumluluk", okur: "OB2", oc: "BİY.9.1.2. b) Bilgileri dönüştürür.", icerik: "Bilimsel Süreçler ve Veri Analizi", kabuller: "Redi ve Pasteur deneyleri bilinir.", kopru: "Sürdürülebilirlik ve biyolojik çeşitlilik bağı.", uygulamalar: "• Zihin haritaları oluşturulur.<br>• Canlı niteliklerine ilişkin araştırma raporları sunulur.", zengin: "Endemik tür animasyonu.", destek: "Yakın çevredeki ağaçların tür bazında incelenmesi." },
+            5: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB8", kavramsal: "KB2.14", egilimler: "E3.4", sdb: "SDB1.2", deger: "D14. Saygı", okur: "OB1", oc: "BİY.9.1.3. Bilimsel araştırmaların bilim etiğine uygunluğu.", icerik: "Bilim Etiği ve İnsan Hayatına Etkisi", kabuller: "Etik değerlerin önemi bilinmektedir.", kopru: "Biyoloji araştırmalarında objektiflik.", uygulamalar: "• Etik dışı vakalar tartışılır.<br>• Bilim insanı sorumlulukları üzerine drama.", zengin: "Rosalind Franklin vakası araştırması.", destek: "Etik kurallar görsel panosu." },
+            6: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1, FBAB8", kavramsal: "KB2.6", egilimler: "E3.8", sdb: "SDB2.1", deger: "D3", okur: "OB1", oc: "BİY.9.1.4. Canlıların ortak özellikleri: Hücre, Metabolizma, Beslenme.", icerik: "Canlılığın Temeli ve Ortak Özellikler", kabuller: "Canlı cansız farkı bilinir.", kopru: "Hücresel organizasyonun yaşamsal önemi.", uygulamalar: "• Mikroskopta hücre gözlemi.<br>• Beslenme tipleri tablosu oluşturulur.", zengin: "Arkelerin ekstrem metabolizmaları.", destek: "Canlı özelliği kart oyunu." },
+            7: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1", kavramsal: "KB2.10", egilimler: "E3.4", sdb: "SDB1.2", deger: "D12", okur: "OB1", oc: "BİY.9.1.4. d) Virüslerin sınıflandırılamama nedenlerini açıklar.", icerik: "Virüslerin Yapısı ve Özellikleri", kabuller: "Hücrenin canlılık birimi olduğu bilinir.", kopru: "Virüslerin biyoteknolojik kullanım alanları.", uygulamalar: "• Virüs modeli tasarımı.<br>• Canlı-Cansız tartışması (Sokratik tartışma).", zengin: "Bakteriyofajların tıbbi kullanımı.", destek: "Virüs yapıları 3D animasyon." },
+            8: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1, FBAB8", kavramsal: "KB2.14", egilimler: "E3.4", sdb: "SDB2.1", deger: "D16", okur: "OB1", oc: "BİY.9.1.4. Canlıların ortak özellikleri: Metabolizma, Homeostazi, Adaptasyon.", icerik: "Yaşamsal Dengeler (Homeostazi)", kabuller: "Adaptasyon kavramı temel düzeyde bilinir.", kopru: "Homeostazi kaybının hastalıklara etkisi.", uygulamalar: "• Vücut sıcaklığı dengesi tartışılır.<br>• Adaptasyon örnekleri görselleştirilir.", zengin: "Biyomimetik tasarımlar araştırması.", destek: "Homeostazi şematik anlatımı." },
+            9: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB1, FBAB2", kavramsal: "KB2.10", egilimler: "E1.1", sdb: "SDB1.2", deger: "D12", okur: "OB1", oc: "BİY.9.1.4. Virüslerin özellikleri ve hastalık yapma mekanizmaları.", icerik: "Virüs Hastalıkları ve Savunma", kabuller: "Hastalık yapan etkenler bilinmektedir.", kopru: "Pandemiler ve toplumsal önlemler.", uygulamalar: "• Salgın simülasyonu çalışması.<br>• Aşılanma bilinci üzerine poster hazırlama.", zengin: "mRNA aşı teknolojisi incelemesi.", destek: "Virüs döngüsü videoları." },
+            10: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB2", kavramsal: "KB2.9", egilimler: "E3.7", sdb: "SDB2.1", deger: "D14", okur: "OB1", oc: "BİY.9.1.5. Modern sınıflandırma yaklaşımları ve Linne.", icerik: "Sınıflandırma Tarihçesi ve İkili Adlandırma", kabuller: "Akrabalık benzerliği ilkesi bilinir.", kopru: "Ekolojik koruma ve taksonomi bağı.", uygulamalar: "• Binomial adlandırma kart oyunu.<br>• Filogenetik ağaç analizi.", zengin: "Taksonomi tarihçesi araştırması.", destek: "Tür görselleri pano çalışması." },
+            11: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB2, FBAB8", kavramsal: "KB2.10", egilimler: "E3.4", sdb: "SDB1.2", deger: "D3", okur: "OB1", oc: "BİY.9.1.6. Üç üst âlem (domain) sisteminde yer alan canlıların özellikleri.", icerik: "Domain Sistemi: Bakteriler ve Arkeler", kabuller: "Prokaryot kavramı bilinmektedir.", kopru: "Arkelerin endüstriyel kullanım alanları.", uygulamalar: "• Bakteri ve arke karşılaştırma tablosu.<br>• Mikroskobik yaşam belgeseli kesiti.", zengin: "Biyoremediasyon ve arkeler.", destek: "Bakteri yapısı boyama sayfası." },
+            12: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB2, FBAB8", kavramsal: "KB2.10", egilimler: "E3.1", sdb: "SDB2.1", deger: "D5", okur: "OB1", oc: "BİY.9.1.6. b) Örüntüleri listeler.", icerik: "Ökaryotlar: Protista Alemi Genel Özellikleri", kabuller: "Hücre tipleri arasındaki fark bilinir.", kopru: "Deniz ekosistemlerinde protistlerin rolü.", uygulamalar: "• Amip, paramesyum, öglena görselleri incelenir.<br>• Venn şeması oluşturulur.", zengin: "Alglerin biyo-yakıt üretiminde kullanımı.", destek: "Hazır preparat inceleme." },
+            13: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB2", kavramsal: "KB2.6", egilimler: "E3.3", sdb: "SDB1.2", deger: "D16", okur: "OB1", oc: "BİY.9.1.6. Bitkiler ve Mantarlar âleminin genel özellikleri.", icerik: "Bitki ve Mantar Dünyası", kabuller: "Fotosentez kavramı bilinir.", kopru: "Ayrıştırıcıların madde döngüsündeki önemi.", uygulamalar: "• Bitki ve mantar farkları tablosu.<br>• Okul bahçesinde bitki gözlemi.", zengin: "Likenlerin çevre kirliliği göstergesi olması.", destek: "Bitki-Mantar karşılaştırma kartları." },
+            14: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB2", kavramsal: "KB2.14", egilimler: "E3.6", sdb: "SDB2.1", deger: "D3", okur: "OB1", oc: "BİY.9.1.6. Hayvanlar âleminin sınıflandırılması.", icerik: "Omurgalı ve Omurgasız Hayvanlar", kabuller: "Tüketici beslenme bilinmektedir.", kopru: "Yaban hayatı koruma ve biyoçeşitlilik.", uygulamalar: "• Omurgalı sınıfları karşılaştırma.<br>• Hayvan barınakları üzerine tartışma.", zengin: "Eklem bacaklıların tarımsal önemi.", destek: "Hayvan sınıfları video özetleri." },
+            15: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB8", kavramsal: "KB2.10", egilimler: "E3.8", sdb: "SDB1.2", deger: "D12", okur: "OB1", oc: "BİY.9.1.6. ç) Önerme sunar.", icerik: "Canlılar Alemi Genel Değerlendirme", kabuller: "Soy ağacı mantığı bilinir.", kopru: "Biyoteknoloji ve biyomimetik ilişkisi.", uygulamalar: "• Üç domain karşılaştırma raporu.<br>• 'Hangi Aleme Aitim?' oyunu.", zengin: "Filogenetik ağaçların moleküler kanıtları.", destek: "Tema zihin haritası." },
+            16: { tema: "ARA DEĞERLENDİRME", sure: "2 Saat", alan: "Sınav Haftası", kavramsal: "Geri Bildirim", egilimler: "E3.4", sdb: "Öz Değerlendirme", deger: "Sorumluluk", okur: "Yansıtıcı", oc: "Tema 1: Yaşam ünitesinin genel değerlendirmesi.", icerik: "Tema Sonu Tekrar ve Ölçme", kabuller: "Konuların anlaşıldığı kabul edilir.", kopru: "Gerçek hayat problemleri ile biyolojik çıkarımlar.", uygulamalar: "• Sınav analizi.<br>• Eksik öğrenmelerin tespiti ve telafisi.", zengin: "Hatalı cevap analiz raporu.", destek: "Bireysel geri bildirim." },
+            17: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB8", kavramsal: "KB2.14", egilimler: "E3.1", sdb: "SDB2.1", deger: "D5", okur: "OB1", oc: "BİY.9.1.6. d) Değerlendirme yapar.", icerik: "Canlılar ve Yaşamsal İlişkiler", kabuller: "Besin zinciri bilinmektedir.", kopru: "İstilacı türlerin yerel biyoçeşitliliğe etkisi.", uygulamalar: "• Okul gazetesi metni hazırlama.<br>• Ekosistem dengesi tartışması.", zengin: "Endemik tür koruma stratejileri.", destek: "İnfografik okuma." },
+            18: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB8", kavramsal: "KB2.10", egilimler: "E1.1", sdb: "SDB1.2", deger: "D16", okur: "OB1", oc: "BİY.9.1.7. Biyoçeşitliliği oluşturan unsurlarla ilgili çıkarım yapabilme.", icerik: "Biyoçeşitlilik Unsurları: Gen, Tür, Ekosistem", kabuller: "Biyoçeşitlilik sayısal çokluk sanılmamalıdır.", kopru: "Nuh’un Gemisi ulusal biyodiversite projesi.", uygulamalar: "• Belgesel izleme.<br>• Beyin fırtınası: Biyoçeşitlilik neden önemli?", zengin: "Biyo-kaçakçılık raporu hazırlama.", destek: "Kavram haritası doldurma." },
+            19: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB8", kavramsal: "KB2.10", egilimler: "E3.4", sdb: "SDB1.2", deger: "D16", okur: "OB1", oc: "BİY.9.1.7. a) Nitelikleri tanımlar.", icerik: "Ekosistem Çeşitliliği ve Türkiye", kabuller: "Türkiye'nin iklim çeşitliliği bilinir.", kopru: "İklim değişikliği ve göçmen türler.", uygulamalar: "• Orman, Deniz ve Bozkır ekosistemleri karşılaştırılır.<br>• Yerel ekosistem veri toplama.", zengin: "Sulak alanların korunması projesi.", destek: "Bölge ekosistem görselleri." },
+            20: { tema: "BİY.9.1.YAŞAM", sure: "2 Saat", alan: "FBAB8", kavramsal: "KB2.14", egilimler: "E3.2", sdb: "SDB2.1", deger: "D5", okur: "OB1", oc: "BİY.9.1.7. b-c) Verileri kaydeder ve yorumlar.", icerik: "Ulusal Biyoçeşitlilik Envanteri", kabuller: "Veri toplama süreçleri bilinmektedir.", kopru: "Sürdürülebilir kalkınma ve doğal kaynaklar.", uygulamalar: "• Noah veritabanı incelenir.<br>• Verilerden grafik oluşturma.", zengin: "Endemik bitkilerin ekonomik değeri.", destek: "Hazır veri seti yorumlama." },
+            21: { tema: "BİY.9.2.ORGANİZASYON", sure: "2 Saat", alan: "FBAB7, FBAB10", kavramsal: "KB2.4, KB2.6", egilimler: "E1.3, E3.6", sdb: "SDB1.2", deger: "D3", okur: "OB1, OB2", oc: "BİY.9.2.1. İnorganik moleküllerin canlı yaşamı için önemi.", icerik: "Su ve Minerallerin Biyolojik Rolü", kabuller: "Lab güvenlik kuralları bilinmektedir.", kopru: "Homeostazi ve vücut sıvı dengesi.", uygulamalar: "• Su molekülü deneyleri.<br>• Mineral eksiklik tablosu çalışması.", zengin: "Suyun öz ısısı ve küresel iklim dengesi.", destek: "Deney videoları izleme." },
+            22: { tema: "BİY.9.2.ORGANİZASYON", sure: "2 Saat", alan: "FBAB7, FBAB8", kavramsal: "KB2.14", egilimler: "E2.2", sdb: "SDB1.2", deger: "D16", okur: "OB1", oc: "BİY.9.2.1. c) Verileri değerlendirir.", icerik: "Mineraller ve Sağlıklı Beslenme", kabuller: "Minerallerin dışarıdan alınması gerektiği bilinir.", kopru: "Beslenme alışkanlıkları ve mineral yetersizlikleri.", uygulamalar: "• Öğrenci öğün analizi.<br>• Mineral içeren besinler tablosu.", zengin: "Vücut pH dengesi ve tampon çözeltiler.", destek: "Mineral-Besin eşleştirme oyunu." },
+            23: { tema: "BİY.9.2.ORGANİZASYON", sure: "2 Saat", alan: "FBAB2, FBAB8", kavramsal: "KB2.6", egilimler: "E3.1", sdb: "SDB2.1", deger: "D3", okur: "OB1", oc: "BİY.9.2.2. Organik moleküller: Yapı ve çeşitleri.", icerik: "Karbonhidratlar, Yağlar ve Proteinler", kabuller: "Besin grupları bilinmektedir.", kopru: "Diyetetik ve biyokimya arasındaki ilişki.", uygulamalar: "• Jigsaw tekniği ile organik madde grupları.<br>• Güvenilir kaynak araştırması.", zengin: "Protein denatürasyonu ve etkileri.", destek: "Molekül maketleri çalışması." },
+            24: { tema: "BİY.9.2.ORGANİZASYON", sure: "2 Saat", alan: "FBAB2, FBAB8", kavramsal: "KB2.4", egilimler: "E3.4", sdb: "SDB2.1", deger: "D3", okur: "OB1", oc: "BİY.9.2.2. b) Bilgilere ulaşır ve doğrular.", icerik: "Hücre Zarından Madde Geçişleri ve Organikler", kabuller: "Enerji ihtiyacı bilinmektedir.", kopru: "Metabolizma hızı ve organik bileşikler.", uygulamalar: "• Veri kıyaslama çalışmaları.<br>• Sağlıklı yaşam panosu hazırlama.", zengin: "Enzimlerin inhibitör ve aktivatörleri analizi.", destek: "Madde geçişleri draması." }
+        };
+
+        const select = document.getElementById('weekSelect');
+        for(let i=1; i<=24; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = i + ". Hafta";
+            select.appendChild(opt);
+        }
+
+        function syncInputs() {
+            document.getElementById('p-okul-ust').innerText = document.getElementById('input-okul').value || "....................................";
+            document.getElementById('p-ogretmen-ad').innerText = document.getElementById('input-ogretmen').value || "................";
+            document.getElementById('p-mudur-ad').innerText = document.getElementById('input-mudur').value || "................";
+        }
+
+        function updateWeekContent() {
+            const week = select.value;
+            const data = planData[week] || planData[1]; 
+            
+            // EKRAN GÜNCELLEME
+            document.getElementById('currentWeekTitle').innerText = week + ". HAFTA GÜNLÜK PLANI";
+            document.getElementById('val-tema').innerText = data.tema || "...";
+            document.getElementById('val-sure').innerText = data.sure || "...";
+            document.getElementById('val-alan').innerText = data.alan || "...";
+            document.getElementById('val-kavramsal').innerText = data.kavramsal || "...";
+            document.getElementById('val-egilimler').innerText = data.egilimler || "...";
+            document.getElementById('val-sdb').innerText = data.sdb || "...";
+            document.getElementById('val-deger').innerText = data.deger || "...";
+            document.getElementById('val-okur').innerText = data.okur || "...";
+            document.getElementById('val-oc').innerHTML = data.oc || "...";
+            document.getElementById('val-icerik').innerHTML = data.icerik || "...";
+            document.getElementById('val-kabuller').innerText = data.kabuller || "...";
+            document.getElementById('val-kopru').innerText = data.kopru || "...";
+            document.getElementById('val-uygulamalar').innerHTML = data.uygulamalar || "...";
+            document.getElementById('val-zengin').innerText = data.zengin || "...";
+            document.getElementById('val-destek').innerText = data.destek || "...";
+
+            // YAZDIRMA FORMU GÜNCELLEME
+            document.getElementById('p-hafta-no').innerText = week;
+            document.getElementById('p-tema').innerText = data.tema || "...";
+            document.getElementById('p-sure').innerText = data.sure || "...";
+            document.getElementById('p-alan').innerText = data.alan || "...";
+            document.getElementById('p-kavramsal').innerText = data.kavramsal || "...";
+            document.getElementById('p-egilimler').innerText = data.egilimler || "...";
+            document.getElementById('p-sdb').innerText = data.sdb || "...";
+            document.getElementById('p-deger').innerText = data.deger || "...";
+            document.getElementById('p-okur').innerText = data.okur || "...";
+            document.getElementById('p-oc').innerText = (data.oc || "...").replace(/<br>/g, "\n");
+            document.getElementById('p-icerik').innerText = data.icerik || "...";
+            document.getElementById('p-kabuller').innerText = data.kabuller || "...";
+            document.getElementById('p-kopru').innerText = data.kopru || "...";
+            document.getElementById('p-uygulamalar').innerHTML = data.uygulamalar || "...";
+            document.getElementById('p-zengin').innerText = data.zengin || "...";
+            document.getElementById('p-destek').innerText = data.destek || "...";
+
+            syncInputs();
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById('content-' + id);
+            const icon = document.getElementById('icon-' + id);
+            const isActive = content.classList.contains('active');
+            
+            document.querySelectorAll('.accordion-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.fa-chevron-down').forEach(i => i.style.transform = 'rotate(0deg)');
+            
+            if (!isActive) {
+                content.classList.add('active');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        window.onload = updateWeekContent;
+    </script>
+</body>
+</html>
